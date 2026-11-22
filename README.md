@@ -17,14 +17,24 @@ How it plays:
 - A transposition table keyed by an incrementally updated Zobrist
   hash, storing depth, a bound flag (exact / lower / upper, scored
   against the original search window) and the best move, which is
-  always tried first
+  always tried first. The table is kept clean: entries are stored
+  only from searches that finished inside the node budget, and
+  iterative deepening only accepts the last completed iteration,
+  so a cut-off search can never poison a later move choice
 - Check extension: positions where the side to move is in check are
   searched one ply deeper, so forcing lines are resolved properly
+- Mate-distance scoring: a mate is worth more the sooner it lands,
+  so the engine picks the fastest mate and delays being mated —
+  won games end quickly instead of drifting
 - Moves are ordered by the table move, then captures by MVV-LVA;
   legality is tested inside the search loop, so untried moves cost
   nothing
-- Material plus piece-square evaluation: pawns are rewarded for
-  advancing and minor pieces for occupying central squares
+- Tapered piece-square evaluation driven by a game phase tracked
+  incrementally from captured material: pawn advancement pays off
+  quadratically and more as the endgame nears, minor pieces are
+  rewarded for central squares, rooks for reaching the seventh
+  rank, and the king is kept in the corner early but brought to
+  the center once the board empties
 - Stalemate scores as a draw
 
 ## Run it
