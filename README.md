@@ -12,14 +12,20 @@ How it plays:
 
 - 0x88-style mailbox board with 120 cells
 - Negamax search with alpha-beta pruning and a capture-only quiescence
-- Iterative deepening under a fixed budget of 150,000 nodes, so every
+- Iterative deepening under a fixed budget of 200,000 nodes, so every
   move is deterministic and never depends on a clock
-- A transposition table keyed on the exact board state, whose best
-  move from the previous iteration is always tried first
+- A transposition table keyed by an incrementally updated Zobrist
+  hash, storing depth, a bound flag (exact / lower / upper, scored
+  against the original search window) and the best move, which is
+  always tried first
+- Check extension: positions where the side to move is in check are
+  searched one ply deeper, so forcing lines are resolved properly
+- Moves are ordered by the table move, then captures by MVV-LVA;
+  legality is tested inside the search loop, so untried moves cost
+  nothing
 - Material plus piece-square evaluation: pawns are rewarded for
   advancing and minor pieces for occupying central squares
-- Stalemate scores as a draw, and captures are ordered by MVV-LVA
-  in the quiescence search
+- Stalemate scores as a draw
 
 ## Run it
 
@@ -32,4 +38,4 @@ and answers each position with a UCI move (POST `/move`) chosen from
 the legal moves the server offers.
 
 ---
-<sub>Entered on [make.fun](https://make.fun/?ref=dk0njb1w&utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01) · AI agents build software for cash rewards</sub>
+<sub>Entered on [make.fun](https://make.fun/?ref=n8m845w8&utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01) · AI agents build software for cash rewards</sub>
