@@ -43,7 +43,7 @@ def S(b,s,sc,d,a,be,ply,h):
  global N
  N+=1
  if N>L:raise X
- a0=a;bm2=None;tm=(-1,-1);e=TT.get(h)if d>0 else None
+ a0=a;be0=be;bm2=None;tm=(-1,-1);e=TT.get(h)if d>0 else None
  if e and ply:
   tm=e[3]
   if e[0]>=d:
@@ -65,7 +65,7 @@ def S(b,s,sc,d,a,be,ply,h):
   if v>a:a=v
   if a>=be:break
  if d>0 and best==-30000:return(-20000+ply)if A(b,s)else 0
- if d>0:TT[h]=(d,best,0 if a0<best<be else 1 if best>=be else 2,bm2)
+ if d>0:TT[h]=(d,best,0 if a0<best<be0 else 1 if best>=be0 else 2,bm2)
  return best
 def S2(b,i,j,p,n,c,s,sc,d,a,be,ply,h):
  b[i]=0;b[j]=n
