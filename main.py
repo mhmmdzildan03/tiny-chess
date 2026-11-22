@@ -1,115 +1,144 @@
-import json,os,sys,urllib.request as U
-E=os.environ["MAKEFUN_ENV_URL"]
-def P(p,d):return json.load(U.urlopen(U.Request(E+p,json.dumps(d).encode(),{"content-type":"application/json"})))
-V=[0,100,320,330,500,900,0]
-K=(-11,-10,-9,-1,1,9,10,11)
-D=[0,0,(-21,-19,-12,-8,8,12,19,21),(-11,-9,9,11),(-10,-1,1,10),K,K]
-def q(p,i,w):
- r,f=divmod(i-21,10);c=7-abs(2*f-7)-abs(2*r-7);a=(6-r)if w else(r-1)
- if p==1:return a*a*3+a*4+(c if a>2 else 0)
- if p in(2,3):return c*5
- if p==4:return 12 if r==(1 if w else 8)else c
- if p==5:return c*2
+import os,json,urllib.request as U
+VV=[0,100,320,330,500,900,0];CE=[0,1,2,3,3,2,1,0]
+SQ=[21+i+2*(i//8) for i in range(64)]
+KN=[21,19,12,8,-8,-12,-19,-21];D8=[10,-10,1,-1,11,9,-9,-11];RD={28:1,21:2,98:4,91:8}
+B=[99]*120;TN=1;CA=0;EP=0;ND=0;TT={};KP=[25,95]
+def PF(fen):
+ global TN,CA,EP
+ for s in SQ:B[s]=0
+ pt=fen.split();TN=1-2*(pt[1]=='b');s=91
+ for ch in pt[0]:
+  if ch=='/':s-=18
+  elif ch.isdigit():s+=int(ch)
+  else:p="pnbrqk".index(ch.lower())+1;B[s]=p if ch<'a' else -p;s+=1
+ CA=0
+ for ch in pt[2]:CA|={"K":1,"Q":2,"k":4,"q":8}.get(ch,0)
+ EP=0 if pt[3]=='-' else (int(pt[3][1])+1)*10+ord(pt[3][0])-96
+def AT(s,by):
+ if by in (B[s-9*by],B[s-11*by]):return 1
+ for d in KN:
+  if B[s+d]==by*2:return 1
+ for d in D8:
+  if B[s+d]==by*6:return 1
+  x=s+d
+  while B[x]==0:x+=d
+  if B[x] in (by*5,by*(3 if abs(d) in (9,11) else 4)):return 1
  return 0
-T={c:[(1 if c>0 else-1)*(V[abs(c)]+q(abs(c),i,c>0))for i in range(120)]for c in range(-6,7)if c}
-import random
-R=random.Random(7);Z=[[R.getrandbits(64)for i in range(120)]for p in range(13)];ZS=R.getrandbits(64);TT={}
-def G(b,s,o):
- for i in range(21,99):
-  p=b[i]*s
-  if 0<p<7:
-   if p==1:
-    d=-10*s;j=i+d
-    for k in(j-1,j+1):
-     if b[k]!=9 and b[k]*s<0:yield i,k,j//10 in(2,9)
-    if o==0 and b[j]==0:
-     yield i,j,j//10 in(2,9)
-     if i//10==(8 if s>0 else 3)and b[j+d]==0:yield i,j+d,0
-   else:
-    for d in D[p]:
-     j=i
-     while 1:
-      j+=d;c=b[j]
-      if c==9 or c*s>0:break
-      if c*s<0 or o==0:yield i,j,0
-      if c or p in(2,6):break
-def A(b,s):
- if 6*s not in b:return 1
- k=b.index(6*s)
- return any(j==k for i,j,p in G(b,-s,1))
-class X(Exception):0
-N=L=0
-def S(b,s,sc,d,a,be,ply,h):
- global N
- N+=1
- if N>L:raise X
- a0=a;be0=be;bm2=None;tm=(-1,-1);e=TT.get(h)if d>0 else None
- if e and ply:
-  tm=e[3]
-  if e[0]>=d:
-   if e[2]==0:return e[1]
-   if e[2]==1:a=max(a,e[1])
-   else:be=min(be,e[1])
-   if a>=be:return e[1]
- best=-30000
- if d<=0:
-  best=s*sc
-  if best>=be:return best
-  a=max(a,best)
- for i,j,pr in sorted(G(b,s,d<=0),key=lambda m:(m[0]==tm[0] and m[1]==tm[1])*1000+abs(b[m[1]])*10-abs(b[m[0]]),reverse=True):
-  c=b[j]
-  if abs(c)==6:return 20000-ply
-  p=b[i];n=5*s if pr else p
-  v=-S2(b,i,j,p,n,c,s,sc,d,a,be,ply,h)
-  if v>best:best=v;bm2=(i,j)
+def GEN(co):
+ ms=[]
+ for s in SQ:
+  p=B[s]
+  if not p or p*TN<=0:continue
+  t=abs(p);r=s//10-2
+  if t==1:
+   pr=r==(6 if TN>0 else 1)
+   def AD(to):
+    if pr:
+     for x in (5,4,3,2):ms.append((s,to,x))
+    else:ms.append((s,to,0))
+   for d in (9*TN,11*TN):
+    to=s+d;q=B[to]
+    if q!=99 and (q*TN<0 or to==EP):AD(to)
+   if co:continue
+   if not B[s+10*TN]:
+    AD(s+10*TN)
+    if r==(1 if TN>0 else 6) and not B[s+20*TN]:ms.append((s,s+20*TN,0))
+  else:
+   for d in (KN,[11,9,-9,-11],[10,-10,1,-1],D8,D8)[t-2]:
+    to=s
+    while 1:
+     to+=d;q=B[to]
+     if q==99 or q*TN>0:break
+     if not co or q:ms.append((s,to,0))
+     if q or t in (2,6):break
+   if t==6 and not co and s%70==25:
+    for ds in (2,-2):
+     bt=(1 if TN>0 else 4)*(2 if ds<0 else 1);em=(s+1,s+2) if ds>0 else (s-1,s-2,s-3)
+     if CA&bt and all(not B[x] for x in em):ms.append((s,s+ds,0))
+ return ms
+def RF(m):
+ f,t=m[0],m[1];return (f+3,f+1) if t>f else (f-4,f-1)
+def MK(m):
+ global TN,CA,EP
+ fr,to,pr=m;p=B[fr];cap=B[to];cs=-1
+ if abs(p)==1 and to==EP and not cap and fr%10!=to%10:cs=to-10*TN;cap=B[cs]
+ u=(cap,CA,EP,cs);B[fr]=0;B[to]=pr*TN if pr else p
+ if cap and cs>=0:B[cs]=0
+ if abs(p)==6:
+  KP[0 if TN>0 else 1]=to
+  if abs(to-fr)==2:
+   rf,rt=RF(m);B[rt]=B[rf];B[rf]=0
+  CA&=-(4 if TN>0 else 13)
+ CA&=~(RD.get(fr,0)|RD.get(to,0))
+ EP=fr+10*TN if abs(p)==1 and abs(to-fr)==20 else 0;TN=-TN
+ return u
+def UN(m,u):
+ global TN,CA,EP
+ TN=-TN;fr,to,pr=m;cap,CA,EP,cs=u;p=B[to]
+ if abs(p)==6:
+  KP[0 if TN>0 else 1]=fr
+  if abs(to-fr)==2:
+   rf,rt=RF(m);B[rf]=B[rt];B[rt]=0
+ B[fr]=TN if pr else p;B[to]=0
+ if cap:B[cs if cs>=0 else to]=cap
+def LG(co):
+ o=[]
+ for m in GEN(co):
+  u=MK(m);bad=AT(KP[0 if TN<0 else 1],TN);UN(m,u)
+  if not bad:o.append(m)
+ return o
+def EV():
+ tot=0
+ for s in SQ:
+  p=B[s]
+  if not p:continue
+  t=abs(p);v=VV[t];f=s%10-1;r=s//10-2
+  if t==1:v+=(r if p>0 else 7-r)*6
+  elif t in (2,3):v+=(CE[f]+CE[r])*4
+  tot+=v if p>0 else -v
+ return tot*TN
+def SC(m):return 1e6+VV[abs(B[m[1]])]*10-VV[abs(B[m[0]])] if B[m[1]] else 0
+def SE(d,a,b):
+ global ND
+ ND+=1
+ if ND>15e4:return EV()
+ if not d:
+  a=max(a,EV())
+  if a>=b:return a
+  ms=LG(1);ms.sort(key=SC,reverse=True)
+  for m in ms:
+   u=MK(m);v=-SE(0,-b,-a);UN(m,u)
+   if v>a:a=v
+   if a>=b:break
+  return a
+ ky=(tuple(B),TN);e=TT.get(ky)
+ if e and e[0]>=d:return e[1]
+ ms=LG(0)
+ if not ms:return -1e5 if AT(KP[0 if TN>0 else 1],-TN) else 0
+ if e and e[2] in ms:ms.remove(e[2]);ms.insert(0,e[2])
+ best=-1e9
+ for m in ms:
+  u=MK(m);v=-SE(d-1,-b,-a);UN(m,u)
+  if v>best:best=v;bm=m
   if v>a:a=v
-  if a>=be:break
- if d>0 and best==-30000:return(-20000+ply)if A(b,s)else 0
- if d>0:TT[h]=(d,best,0 if a0<best<be0 else 1 if best>=be0 else 2,bm2)
+  if a>=b:break
+ TT[ky]=(d,best,bm)
  return best
-def S2(b,i,j,p,n,c,s,sc,d,a,be,ply,h):
- b[i]=0;b[j]=n
- v=S(b,-s,sc-T[p][i]+T[n][j]-(T[c][j]if c else 0),d-1,-be,-a,ply+1,h^Z[p+6][i]^Z[n+6][j]^(Z[c+6][j]if c else 0)^ZS)
- b[i]=p;b[j]=c
- return v
 def M(fen,legal):
- global N,L
- f=fen.split();b=[9]*120
- for r,w in enumerate(f[0].split("/")):
-  k=21+r*10
-  for ch in w:
-   if ch.isdigit():
-    for _ in range(int(ch)):b[k]=0;k+=1
-   else:b[k]=("pnbrqk".index(ch.lower())+1)*(1 if ch.isupper()else-1);k+=1
- s=1 if f[1]=="w"else-1
- sc=sum(T[b[i]][i]for i in range(21,99)if b[i]and b[i]!=9)
- R=[]
- for u in legal:
-  i=21+(8-int(u[1]))*10+ord(u[0])-97;j=21+(8-int(u[3]))*10+ord(u[2])-97
-  R.append([0,u,i,j,u[4:]])
- bm=legal[0];N=0;L=150000
- try:
-  for d in range(1,12):
-   a=-30000;bv=a
-   for r in R:
-    _,u,i,j,pr=r;p=b[i];c=b[j];n=p
-    if pr:n=("pnbrqk".index(pr)+1)*s
-    sv=[(k,b[k])for k in(i,j,j+10,j-10,i+3,i-4,i+1,i-1,j+1,j-1)if 0<=k<120]
-    b[i]=0;b[j]=n;x=0
-    if abs(p)==6 and abs(j-i)==2:
-     k=i+3 if j>i else i-4;b[k]=0;b[(i+j)//2]=4*s
-    if abs(p)==1 and c==0 and (j-i)%10:b[j+10*s]=0;x=T[-p][j+10*s]
-    hh=ZS if s<0 else 0
-    for k2 in range(21,99):
-     if b[k2]and b[k2]!=9:hh^=Z[b[k2]+6][k2]
-    v=-S(b,-s,sc-T[p][i]+T[n][j]-(T[c][j]if c else 0)-x,d-1,-30000,-a,1,hh)
-    for k,z in sv:b[k]=z
-    r[0]=v
-    if v>bv:bv=v;a=v;cur=u
-   bm=cur;R.sort(key=lambda r:-r[0])
- except X:0
- return bm
+ global ND,TT
+ PF(fen);TT={};ND=0;fb=None
+ for d in range(9):
+  SE(d,-1e9,1e9)
+  if ND>15e4:break
+  e=TT.get((tuple(B),TN))
+  if e and e[2]:fb=e[2]
+ if fb is None:return legal[0]
+ fr,to,pr=fb;u=chr(96+fr%10)+str(fr//10-1)+chr(96+to%10)+str(to//10-1)+("nbrq"[pr-2] if pr else "")
+ return u if u in legal else legal[0]
+def RQ(pth,body):return json.load(U.urlopen(U.Request(os.getenv("MAKEFUN_ENV_URL","")+pth,data=json.dumps(body).encode())))
 while 1:
- g=P("/game",{})
- if g["status"]=="done":break
- while g["status"]=="your_move":g=P("/move",{"game":g["game"],"move":M(g["fen"],g["legal_moves"])})
+ try:
+  g=RQ("/game",{})
+  if g.get("status")=="done":break
+  if g.get("status")=="your_move":RQ("/move",{"game":g["game"],"move":M(g["fen"],g["legal_moves"])})
+ except Exception:pass
